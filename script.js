@@ -781,12 +781,30 @@ async function fetchAgenda() {
   body.innerHTML = `<div style="padding:24px;text-align:center;"><div class="spinner" style="margin:auto;"></div></div>`;
 
   let q = sb.from("agendamentos").select("*").order("data").order("hora");
+
   if (agFiltros.modo === 'dia') {
-    if (agFiltros.data) q = q.eq("data", agFiltros.data);
+    // Se não tiver data selecionada, usa hoje como padrão
+    const dataFiltro = agFiltros.data || new Date().toISOString().split("T")[0];
+    q = q.eq("data", dataFiltro);
+
+    // Garante que o input e calDiaSel estejam sincronizados
+    if (!agFiltros.data) {
+      agFiltros.data = dataFiltro;
+      calDiaSel = dataFiltro;
+      const fData = $("f-data");
+      if (fData) fData.value = dataFiltro;
+    }
   } else if (agFiltros.modo === 'periodo') {
     if (agFiltros.dataInicio) q = q.gte("data", agFiltros.dataInicio);
     if (agFiltros.dataFim)    q = q.lte("data", agFiltros.dataFim);
+
+    // Se nenhum dos dois estiver preenchido, avisa o usuário
+    if (!agFiltros.dataInicio && !agFiltros.dataFim) {
+      body.innerHTML = `<div style="padding:20px;color:var(--ink60);font-size:13px;text-align:center;">Selecione ao menos uma data para filtrar por período.</div>`;
+      return;
+    }
   }
+
   if (agFiltros.dent)   q = q.eq("dentista_nome", agFiltros.dent);
   if (agFiltros.status) q = q.eq("status", agFiltros.status);
 

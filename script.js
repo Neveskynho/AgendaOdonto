@@ -220,6 +220,9 @@ async function dashboard() {
 // ─── AGENDA ──────────────────────────────────────────────────────────────────
 let agFiltros = { data:"", dataInicio:"", dataFim:"", dent:"", status:"", modo:"dia" };
 
+// ─── PACIENTES ───────────────────────────────────────────────────────────────
+let pacBusca = "";
+
 // ─── CALENDÁRIO ──────────────────────────────────────────────────────────────
 let calMes    = new Date().getMonth();
 let calView   = 'month'; // month | week | day
@@ -298,6 +301,7 @@ function limparFiltros() {
 function renderAgendaPage() {
   const podeAcao = ["Administrador","Atendente","Dentista"].includes(currentUser.perfil);
   $("content").innerHTML = `
+    <div id="cal-nav"></div>
     <div id="cal-wrap"></div>
     <div style="background:white;border:1px solid var(--ink30);border-radius:12px;padding:14px 16px;margin-top:12px;margin-bottom:12px;">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -368,6 +372,10 @@ function renderAgendaPage() {
 function renderCalendarioEl() {
   const wrap = $("cal-wrap");
   if (!wrap) return;
+
+  // Sempre renderiza o header de navegação no cal-nav separado
+  renderCalNavHeader();
+
   if (calView === 'week') { renderCalendarioSemanal(); return; }
   if (calView === 'day')  { renderCalendarioDiario();  return; }
 
@@ -416,25 +424,6 @@ function renderCalendarioEl() {
 
   wrap.innerHTML = `
     <div style="background:white;border:1px solid var(--ink30);border-radius:12px;padding:16px;margin-bottom:4px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;">
-        <button class="btn btn-secondary" style="padding:5px 12px;font-size:13px;" onclick="navCal(-1)">‹</button>
-        <div style="font-weight:700;font-size:16px;" id="cal-titulo">${MESES_PT[calMes]} ${calAno}</div>
-        <button class="btn btn-secondary" style="padding:5px 12px;font-size:13px;" onclick="navCal(1)">›</button>
-        <div style="margin-left:auto;display:flex;background:var(--ink10);border-radius:8px;padding:3px;gap:2px;">
-          <button onclick="setCalView('month')" id="btn-view-month"
-            style="border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;background:${calView==='month'?'var(--teal700)':'transparent'};color:${calView==='month'?'white':'var(--ink60)'};">
-            Mês
-          </button>
-          <button onclick="setCalView('week')" id="btn-view-week"
-            style="border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;background:${calView==='week'?'var(--teal700)':'transparent'};color:${calView==='week'?'white':'var(--ink60)'};">
-            Semana
-          </button>
-          <button onclick="setCalView('day')" id="btn-view-day"
-            style="border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;background:${calView==='day'?'var(--teal700)':'transparent'};color:${calView==='day'?'white':'var(--ink60)'};">
-            Dia
-          </button>
-        </div>
-      </div>
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;">
         ${DIAS_PT.map(d=>`<div style="text-align:center;font-size:11px;font-weight:700;color:var(--ink60);padding:4px;">${d}</div>`).join("")}
         ${cells}
@@ -444,6 +433,39 @@ function renderCalendarioEl() {
         <span style="font-size:11px;color:var(--ink60);display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#FEE2E2;border:1px solid #DC2626;display:inline-block;"></span>Dia de Triagem</span>
         <span style="font-size:11px;color:var(--ink60);display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--teal700);display:inline-block;"></span>Qtd. de consultas</span>
         <span style="font-size:11px;color:var(--ink60);">💡 Passe o mouse sobre o dia para marcar Triagem</span>
+      </div>
+    </div>`;
+}
+
+function renderCalNavHeader() {
+  const nav = $("cal-nav");
+  if (!nav) return;
+
+  let titulo = "";
+  if (calView === 'month') titulo = `${MESES_PT[calMes]} ${calAno}`;
+  else if (calView === 'week') {
+    const base = calDiaSel ? new Date(calDiaSel + 'T12:00:00') : new Date();
+    const dow  = base.getDay();
+    const inicio = new Date(base); inicio.setDate(base.getDate() - dow);
+    const fim = new Date(inicio); fim.setDate(inicio.getDate() + 6);
+    titulo = `${fmtDate(inicio.toISOString().slice(0,10))} — ${fmtDate(fim.toISOString().slice(0,10))}`;
+  } else if (calView === 'day') {
+    const d = calDiaSel || new Date().toISOString().slice(0,10);
+    titulo = `${DIAS_PT[new Date(d+'T12:00:00').getDay()]} — ${fmtDate(d)}`;
+  }
+
+  nav.innerHTML = `
+    <div style="background:white;border:1px solid var(--ink30);border-radius:12px;padding:12px 16px;margin-bottom:4px;display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-secondary" style="padding:5px 12px;font-size:13px;" onclick="navCal(-1)">‹</button>
+      <div style="font-weight:700;font-size:16px;" id="cal-titulo">${titulo}</div>
+      <button class="btn btn-secondary" style="padding:5px 12px;font-size:13px;" onclick="navCal(1)">›</button>
+      <div style="margin-left:auto;display:flex;background:var(--ink10);border-radius:8px;padding:3px;gap:2px;">
+        <button onclick="setCalView('month')" id="btn-view-month"
+          style="border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;background:${calView==='month'?'var(--teal700)':'transparent'};color:${calView==='month'?'white':'var(--ink60)'};">Mês</button>
+        <button onclick="setCalView('week')" id="btn-view-week"
+          style="border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;background:${calView==='week'?'var(--teal700)':'transparent'};color:${calView==='week'?'white':'var(--ink60)'};">Semana</button>
+        <button onclick="setCalView('day')" id="btn-view-day"
+          style="border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;background:${calView==='day'?'var(--teal700)':'transparent'};color:${calView==='day'?'white':'var(--ink60)'};">Dia</button>
       </div>
     </div>`;
 }
@@ -594,12 +616,12 @@ async function renderCalendarioSemanal() {
   dias.forEach(d => agPorDia[d] = []);
   (ags||[]).forEach(a => { if (agPorDia[a.data]) agPorDia[a.data].push(a); });
 
-  const titulo = `${DIAS_PT[0]} ${fmtDate(dias[0])} — ${DIAS_PT[6]} ${fmtDate(dias[6])}`;
-  const tituloEl = $("cal-titulo"); if (tituloEl) tituloEl.textContent = titulo;
+  // Atualiza título no header fixo
+  const tituloEl = $("cal-titulo");
+  if (tituloEl) tituloEl.textContent = `${fmtDate(dias[0])} — ${fmtDate(dias[6])}`;
 
   wrap.innerHTML = `
     <div style="background:white;border:1px solid var(--ink30);border-radius:12px;overflow:hidden;margin-bottom:4px;">
-      ${/* Header nav já existe no renderCalendarioEl */ ''}
       <div style="display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--ink10);">
         ${dias.map((data, i) => {
           const isHoje = data === hoje;
@@ -646,8 +668,9 @@ async function renderCalendarioDiario() {
   const data = calDiaSel || new Date().toISOString().slice(0,10);
   const { data: ags } = await sb.from("agendamentos").select("*").eq("data", data).order("hora");
 
-  const titulo = `${DIAS_PT[new Date(data+'T12:00:00').getDay()]} — ${fmtDate(data)}`;
-  const tituloEl = $("cal-titulo"); if (tituloEl) tituloEl.textContent = titulo;
+  // Atualiza título no header fixo
+  const tituloEl = $("cal-titulo");
+  if (tituloEl) tituloEl.textContent = `${DIAS_PT[new Date(data+'T12:00:00').getDay()]} — ${fmtDate(data)}`;
 
   const isTriage = _diasEsp[data]?.is_triagem;
   const cfg      = _diasEsp[data]?.triagem_config || {};
@@ -758,7 +781,12 @@ async function fetchAgenda() {
   body.innerHTML = `<div style="padding:24px;text-align:center;"><div class="spinner" style="margin:auto;"></div></div>`;
 
   let q = sb.from("agendamentos").select("*").order("data").order("hora");
-  if (agFiltros.data)   q = q.eq("data", agFiltros.data);
+  if (agFiltros.modo === 'dia') {
+    if (agFiltros.data) q = q.eq("data", agFiltros.data);
+  } else if (agFiltros.modo === 'periodo') {
+    if (agFiltros.dataInicio) q = q.gte("data", agFiltros.dataInicio);
+    if (agFiltros.dataFim)    q = q.lte("data", agFiltros.dataFim);
+  }
   if (agFiltros.dent)   q = q.eq("dentista_nome", agFiltros.dent);
   if (agFiltros.status) q = q.eq("status", agFiltros.status);
 

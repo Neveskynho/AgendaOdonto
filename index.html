@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OdontoAgenda</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="login-left">
+    <div class="login-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C9.5 2 7 4 7 7c0 2 .5 3.5 1 5s1 4 1 6h6c0-2 .5-4.5 1-6s1-3 1-5c0-3-2.5-5-5-5z"/></svg></div>
+    <div class="login-brand">OdontoAgenda</div>
+    <div class="login-tagline">Sistema de Agendamento Odontológico</div>
+    <div class="login-features">
+      <div class="login-feat"><div class="login-feat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="login-feat-t">Dados em nuvem</div><div class="login-feat-s">Supabase PostgreSQL</div></div></div>
+      <div class="login-feat"><div class="login-feat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="login-feat-t">Multi-usuário</div><div class="login-feat-s">Perfis e controle de acesso</div></div></div>
+      <div class="login-feat"><div class="login-feat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="login-feat-t">Dados persistentes</div><div class="login-feat-s">Nada se perde ao recarregar</div></div></div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-heading">Bem-vindo</div>
+    <div class="login-desc">Acesse sua conta para continuar</div>
+    <div class="form-group"><label>E-mail</label><input type="email" id="l-email" placeholder="seu@email.com" autocomplete="email"/></div>
+    <div class="form-group"><label>Senha</label><input type="password" id="l-senha" placeholder="••••••••"/></div>
+    <div class="error-box" id="l-err"></div>
+    <button class="btn btn-primary btn-wide" id="btn-login" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="screen" id="screen-app">
+  <aside id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-row">
+        <div class="sb-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C9.5 2 7 4 7 7c0 2 .5 3.5 1 5s1 4 1 6h6c0-2 .5-4.5 1-6s1-3 1-5c0-3-2.5-5-5-5z"/></svg></div>
+        <div class="sb-logo-name">OdontoAgenda</div>
+      </div>
+      <div class="sb-logo-ver">v1.0 · Supabase</div>
+    </div>
+    <div style="flex:1;padding-top:8px;">
+      <div class="nav-section">Menu</div>
+      <div class="nav-item active" data-page="dashboard" onclick="goTo('dashboard')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="1"/><path d="M3 11l9-8 9 8"/></svg>Início</div>
+      <div class="nav-item" data-page="agenda" onclick="goTo('agenda')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Agenda</div>
+      <div class="nav-item" data-page="pacientes" onclick="goTo('pacientes')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0116 0v2"/></svg>Pacientes</div>
+      <div class="nav-item" data-page="dentistas" onclick="goTo('dentistas')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C9.5 2 7 4 7 7c0 2 .5 3.5 1 5s1 4 1 6h6c0-2 .5-4.5 1-6s1-3 1-5c0-3-2.5-5-5-5z"/></svg>Dentistas</div>
+      <div class="nav-item" data-page="usuarios" id="nav-usuarios" onclick="goTo('usuarios')" style="display:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.87"/></svg>Usuários</div>
+      <div class="nav-item" data-page="relatorios" onclick="goTo('relatorios')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Relatórios</div>
+    </div>
+    <div class="sb-footer">
+      <div class="avatar-row">
+        <div class="avatar" id="sb-av">?</div>
+        <div style="flex:1;min-width:0;"><div class="avatar-name" id="sb-nome">—</div><div class="avatar-role" id="sb-perfil">—</div></div>
+        <button class="btn-logout" onclick="doLogout()" title="Sair"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+      </div>
+    </div>
+  </aside>
+  <main id="main">
+    <div id="topbar">
+      <div><div class="tb-titulo" id="tb-titulo">Painel</div><div class="tb-sub" id="tb-sub"></div></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge" id="tb-badge"></span><span style="color:var(--ink60);font-size:13px;" id="tb-user"></span></div>
+    </div>
+    <div id="content"></div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="fecharModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <h2 id="modal-titulo"></h2>
+      <button class="modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="modal-corpo"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
+</body>
+</html>
